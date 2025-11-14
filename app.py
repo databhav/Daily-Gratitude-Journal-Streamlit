@@ -218,12 +218,8 @@ else:
         is_superuser = False
 
     # Load data based on user type (Privacy check)
-    if is_superuser:
-        df_daily_entries = load_all_data(DAILY_TABLE) # Loads all data
-        df_weekly_letters = load_all_data(WEEKLY_TABLE) # Loads all data
-    else:
-        df_daily_entries = load_user_data(DAILY_TABLE, user) # Loads only user's data
-        df_weekly_letters = load_user_data(WEEKLY_TABLE, user)
+    df_daily_entries = load_user_data(DAILY_TABLE, user) # Loads only user's data
+    df_weekly_letters = load_user_data(WEEKLY_TABLE, user) # Loads only user's data
     
     # --- Sidebar for Navigation and History ---
     with st.sidebar:
@@ -239,26 +235,26 @@ else:
         st.markdown("---")
         
         # Previous Entries Dropdown
+        st.subheader("🗓️ Previous Daily Entries")
         # FIX: Check if DataFrame is empty before trying to access the 'date' column
         if not df_daily_entries.empty:
             daily_dates = sorted(df_daily_entries['date'].unique(), reverse=True)
+        
+            if daily_dates:
+                # Drop the user_id column for non-superusers in history view
+                history_df = df_daily_entries if is_superuser else df_daily_entries.drop(columns=['user_id'], errors='ignore')
+                
+                selected_date = st.selectbox("Select a date to view:", daily_dates)
+                
+                if selected_date:
+                    entry = history_df[history_df['date'] == selected_date].iloc[0]
+                    # Column names g1, r1, etc., match your Supabase table schema
+                    st.markdown(f"**Gratitude 1:** {entry['g1']}")
+                    st.markdown(f"**Reason 1:** {entry['r1']}")
+            else:
+                st.info("No daily entries yet.")
         else:
-            daily_dates = []
-
-        st.subheader("🗓️ Previous Daily Entries")
-        if daily_dates:
-            # Drop the user_id column for non-superusers in history view
-            history_df = df_daily_entries if is_superuser else df_daily_entries.drop(columns=['user_id'], errors='ignore')
-            
-            selected_date = st.selectbox("Select a date to view:", daily_dates)
-            
-            if selected_date:
-                entry = history_df[history_df['date'] == selected_date].iloc[0]
-                # Column names g1, r1, etc., match your Supabase table schema
-                st.markdown(f"**Gratitude 1:** {entry['g1']}")
-                st.markdown(f"**Reason 1:** {entry['r1']}")
-        else:
-            st.info("No daily entries yet.")
+            st.info("No daily entries yet.") # Display if the initial DataFrame load was empty
         
         if is_superuser:
             st.markdown("---")
@@ -278,12 +274,15 @@ else:
         if is_superuser:
             # Superuser view
             st.header("👑 Daily Gratitude - ALL DATA")
-            st.dataframe(df_daily_entries) # Shows user_id column
+            # Only load all data here if user is superuser to avoid loading all data upfront
+            df_all_daily_entries = load_all_data(DAILY_TABLE)
+            st.dataframe(df_all_daily_entries) # Shows user_id column
             
         else:
             st.subheader(f"What 3 things are you grateful for today ({today_str})?")
             # Check if the user already submitted today
-            has_submitted_today = today_str in daily_dates if daily_dates else False
+            # Use the daily_dates list from the sidebar setup
+            has_submitted_today = today_str in daily_dates if 'daily_dates' in locals() and daily_dates else False
             
             if has_submitted_today:
                 st.warning("You've already submitted your gratitude for today!")
@@ -337,7 +336,9 @@ else:
         if is_superuser:
             # Superuser view
             st.header("👑 Weekly Letters - ALL DATA")
-            st.dataframe(df_weekly_letters)
+            # Only load all data here if user is superuser
+            df_all_weekly_letters = load_all_data(WEEKLY_TABLE)
+            st.dataframe(df_all_weekly_letters)
             
         else:
             st.header("Weekly Reflection")
@@ -345,14 +346,27 @@ else:
             # Calculate current week start (Monday)
             current_week_start_str = get_week_start(date.today()) 
             
-            # Check if letter already submitted for this week's start date
-            weekly_dates = df_weekly_letters['week_start'].unique().tolist()
-            has_submitted_this_week = current_week_start_str in weekly_dates
+            # --- FIX FOR KEYERROR: Check if DataFrame is populated before accessing columns ---
+            if not df_weekly_letters.empty:
+                weekly_dates = df_weekly_letters['week_start'].unique().tolist()
+                has_submitted_this_week = current_week_start_str in weekly_dates
+            else:
+                weekly_dates = []
+                has_submitted_this_week = False
+            # --- END FIX ---
             
             st.info(f"Writing reflection for the week starting: **{current_week_start_str}**")
             
             if has_submitted_this_week:
                 st.warning(f"You have already submitted a weekly letter for the week starting {current_week_start_str}. You can only submit one per week.")
+                
+                # Show the submitted content for confirmation
+                try:
+                    submitted_entry = df_weekly_letters[df_weekly_letters['week_start'] == current_week_start_str].iloc[0]
+                    st.subheader("Your Submission:")
+                    st.markdown(f"***{submitted_entry['letter_content']}***")
+                except IndexError:
+                    st.info("Submitted letter content could not be retrieved.")
                 
             else:
                 with st.form("weekly_letter_form"):
