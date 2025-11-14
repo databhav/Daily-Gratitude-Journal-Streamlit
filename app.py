@@ -294,21 +294,28 @@ else:
                 with st.form("gratitude_form"):
                     
                     # --- Single-Row Gratitude Inputs ---
+                    # Keep the header columns for desktop layout clarity
                     col_h1, col_h2 = st.columns([1, 1.5])
                     col_h1.markdown("**I am grateful for...**")
                     col_h2.markdown("**Why?**")
                     
+                    # Row 1
                     col1_1, col1_2 = st.columns([1, 1.5])
-                    g1 = col1_1.text_input("Grateful Item 1", label_visibility="collapsed", key="g1")
-                    r1 = col1_2.text_input("Reason 1", label_visibility="collapsed", key="r1")
+                    # FIX: Removed label_visibility="collapsed" and made labels unique for mobile
+                    g1 = col1_1.text_input("1. I am grateful for...", key="g1", placeholder="Example: The hot cup of tea this morning") 
+                    r1 = col1_2.text_input("1. Reason (Why?):", key="r1", placeholder="Example: It helped me wake up and focus")
                     
+                    # Row 2
                     col2_1, col2_2 = st.columns([1, 1.5])
-                    g2 = col2_1.text_input("Grateful Item 2", label_visibility="collapsed", key="g2")
-                    r2 = col2_2.text_input("Reason 2", label_visibility="collapsed", key="r2")
+                    # FIX: Removed label_visibility="collapsed" and made labels unique for mobile
+                    g2 = col2_1.text_input("2. I am grateful for...", key="g2", placeholder="Example: A positive comment from a friend")
+                    r2 = col2_2.text_input("2. Reason (Why?):", key="r2", placeholder="Example: It boosted my confidence for the day")
 
+                    # Row 3
                     col3_1, col3_2 = st.columns([1, 1.5])
-                    g3 = col3_1.text_input("Grateful Item 3", label_visibility="collapsed", key="g3")
-                    r3 = col3_2.text_input("Reason 3", label_visibility="collapsed", key="r3")
+                    # FIX: Removed label_visibility="collapsed" and made labels unique for mobile
+                    g3 = col3_1.text_input("3. I am grateful for...", key="g3", placeholder="Example: Finishing a challenging task")
+                    r3 = col3_2.text_input("3. Reason (Why?):", key="r3", placeholder="Example: It cleared my schedule for fun activities")
                     
                     st.markdown("---")
                     
