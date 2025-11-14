@@ -293,29 +293,23 @@ else:
             else:
                 with st.form("gratitude_form"):
                     
-                    # --- Single-Row Gratitude Inputs ---
-                    # Keep the header columns for desktop layout clarity
-                    col_h1, col_h2 = st.columns([1, 1.5])
-                    col_h1.markdown("**I am grateful for...**")
-                    col_h2.markdown("**Why?**")
+                    # --- Daily Gratitude Inputs (Now in a Single Column) ---
                     
-                    # Row 1
-                    col1_1, col1_2 = st.columns([1, 1.5])
-                    # FIX: Removed label_visibility="collapsed" and made labels unique for mobile
-                    g1 = col1_1.text_input("1. I am grateful for...", key="g1", placeholder="Example: The hot cup of tea this morning") 
-                    r1 = col1_2.text_input("1. Reason (Why?):", key="r1", placeholder="Example: It helped me wake up and focus")
+                    # Gratitude 1
+                    g1 = st.text_input("**1. I am grateful for...**", key="g1", placeholder="Example: The hot cup of tea this morning") 
+                    r1 = st.text_input("**1. Reason (Why?):**", key="r1", placeholder="Example: It helped me wake up and focus")
                     
-                    # Row 2
-                    col2_1, col2_2 = st.columns([1, 1.5])
-                    # FIX: Removed label_visibility="collapsed" and made labels unique for mobile
-                    g2 = col2_1.text_input("2. I am grateful for...", key="g2", placeholder="Example: A positive comment from a friend")
-                    r2 = col2_2.text_input("2. Reason (Why?):", key="r2", placeholder="Example: It boosted my confidence for the day")
+                    st.markdown("---") # Visual separator between items
+                    
+                    # Gratitude 2
+                    g2 = st.text_input("**2. I am grateful for...**", key="g2", placeholder="Example: A positive comment from a friend")
+                    r2 = st.text_input("**2. Reason (Why?):**", key="r2", placeholder="Example: It boosted my confidence for the day")
 
-                    # Row 3
-                    col3_1, col3_2 = st.columns([1, 1.5])
-                    # FIX: Removed label_visibility="collapsed" and made labels unique for mobile
-                    g3 = col3_1.text_input("3. I am grateful for...", key="g3", placeholder="Example: Finishing a challenging task")
-                    r3 = col3_2.text_input("3. Reason (Why?):", key="r3", placeholder="Example: It cleared my schedule for fun activities")
+                    st.markdown("---") # Visual separator between items
+
+                    # Gratitude 3
+                    g3 = st.text_input("**3. I am grateful for...**", key="g3", placeholder="Example: Finishing a challenging task")
+                    r3 = st.text_input("**3. Reason (Why?):**", key="r3", placeholder="Example: It cleared my schedule for fun activities")
                     
                     st.markdown("---")
                     
