@@ -4,8 +4,6 @@ name: Daily Email Reminder
 # It uses cron syntax: M H D M W (Minute, Hour, Day of Month, Month, Day of Week)
 # '0 12 * * *' means: At minute 0, at hour 12 (noon), every day (*), every month (*), every day of the week (*).
 # NOTE: This runs at 12:00 PM UTC (Coordinated Universal Time). 
-# You might need to adjust the '12' to hit 12 PM in your local time zone.
-# For example, if you are in EST (UTC-5), you'd use '0 17 * * *'.
 on:
   schedule:
     - cron: '0 12 * * *' 
@@ -24,18 +22,26 @@ jobs:
         # Standard action to set up the Python environment
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11' 
+          # Set to 3.10 for common compatibility, or you can stick with 3.11
+          python-version: '3.10' 
 
       - name: Install dependencies
-        # Installs the libraries listed in your requirements.txt
+        # Installs the libraries listed in your requirements.txt (including requests and supabase)
         run: |
           pip install -r requirements.txt
 
       - name: Run Reminder Script
-        # Defines environment variables needed by send_reminders.py
+        # Defines ALL environment variables needed by send_reminders.py
         env:
-          # These must be set as Secrets in your GitHub Repo settings!
+          # --- SUPABASE SECRETS ---
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          
+          # --- MAILJET SECRETS ---
+          # These three secrets MUST be set in your GitHub Repo settings!
+          MAILJET_PUBLIC_KEY: ${{ secrets.MAILJET_PUBLIC_KEY }} 
+          MAILJET_SECRET_KEY: ${{ secrets.MAILJET_SECRET_KEY }}
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }} 
+          
         run: |
           python send_reminders.py
