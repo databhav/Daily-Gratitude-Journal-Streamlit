@@ -31,7 +31,9 @@ def get_supabase_client() -> Client:
 def fetch_users_for_reminder(supabase_client):
     """Fetches user_id and email for all users who registered and have an email."""
     try:
-        response = supabase_client.table(USERS_TABLE).select("user_id, email").not_eq("email", "null").execute()
+        # FIX: Changed the filter from .not_eq("email", "null") to the correct .neq("email", None)
+        # This filters for rows where the 'email' column is NOT null (i.e., has a value).
+        response = supabase_client.table(USERS_TABLE).select("user_id, email").neq("email", None).execute()
         df = pd.DataFrame(response.data)
         return df
     except Exception as e:
