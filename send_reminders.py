@@ -1,29 +1,24 @@
 import os
 import sys
-import requests # Required for making API calls to Mailjet
+import requests
 from supabase import create_client, Client
 import pandas as pd
 import time 
+import json # Added to handle JSON response
 
 # --- Configuration ---
-# NOTE: This script uses environment variables loaded from GitHub Secrets.
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-# Mailjet API Keys (Public and Secret)
 MAILJET_PUBLIC_KEY = os.environ.get("MAILJET_PUBLIC_KEY")
 MAILJET_SECRET_KEY = os.environ.get("MAILJET_SECRET_KEY")
-SENDER_EMAIL = os.environ.get("SENDER_EMAIL")
-
-# Tables (Collections) in Supabase
+SENDER_EMAIL = os.environ.get("SENDER_EMAIL") 
 USERS_TABLE = "user_data" 
 
 if not all([SUPABASE_URL, SUPABASE_KEY, MAILJET_PUBLIC_KEY, MAILJET_SECRET_KEY, SENDER_EMAIL]):
     print("FATAL: Required environment variables are missing (Supabase keys, Mailjet keys, or SENDER_EMAIL).")
-    # Exits the script with an error code if required secrets are missing
     sys.exit(1)
 
-# --- Supabase Functions ---
-
+# --- Supabase Functions (Unchanged) ---
 def get_supabase_client() -> Client:
     """Connects to Supabase."""
     try:
@@ -36,7 +31,6 @@ def get_supabase_client() -> Client:
 def fetch_users_for_reminder(supabase_client):
     """Fetches user_id and email for all users who registered and have an email."""
     try:
-        # Fetching user_id and email from the USERS_TABLE
         response = supabase_client.table(USERS_TABLE).select("user_id, email").not_eq("email", "null").execute()
         df = pd.DataFrame(response.data)
         return df
@@ -49,10 +43,9 @@ def fetch_users_for_reminder(supabase_client):
 def send_reminder_email(recipient_email, username):
     """Sends a personalized gratitude journal reminder using Mailjet API."""
     
-    # 1. Customized Subject Line
     subject = f"IMPORTANT: Daily Gratitude Form Fill Reminder for {username}"
     
-    # 2. Customized HTML Body (Formatted for readability and delivery)
+    # Customized HTML Body (Formatted for readability and delivery)
     html_content = f"""
     <html>
     <body style="font-family: sans-serif; padding: 20px; background-color: #f4f4f9;">
@@ -83,10 +76,8 @@ def send_reminder_email(recipient_email, username):
     </html>
     """
     
-    # Mailjet API Payload
     data = {
         'Messages': [{
-            # This is where SENDER_EMAIL and the name 'Sneha | Gratitude App' are used
             'From': {'Email': SENDER_EMAIL, 'Name': 'Sneha | Gratitude App'},
             'To': [{'Email': recipient_email}],
             'Subject': subject,
@@ -96,25 +87,25 @@ def send_reminder_email(recipient_email, username):
     }
 
     try:
-        # Mailjet API endpoint for sending emails
-        # Uses Basic Authentication with the Public Key as username and Secret Key as password
         response = requests.post(
             'https://api.mailjet.com/v3.1/send',
             auth=(MAILJET_PUBLIC_KEY, MAILJET_SECRET_KEY),
             json=data
         )
         
-        # Check for success (Mailjet returns status 200)
+        response_json = response.json()
+
         if response.status_code == 200:
-            print(f"SUCCESS: Email sent to {recipient_email} (User: {username}) via Mailjet.")
+            # Print the JSON response to confirm Mailjet acceptance details
+            print(f"SUCCESS: Email accepted for {recipient_email}. Mailjet Response: {json.dumps(response_json, indent=2)}")
         else:
-            print(f"ERROR: Email failed for {recipient_email}. Status: {response.status_code}. Response: {response.text}")
+            # Print full response text on error
+            print(f"ERROR: Email failed for {recipient_email}. Status: {response.status_code}. Mailjet Error: {response.text}")
             
     except Exception as e:
         print(f"FATAL API ERROR for {recipient_email}: {e}")
 
-# --- Main Execution ---
-
+# --- Main Execution (Unchanged) ---
 def main():
     print("Starting daily reminder script...")
     supabase_client = get_supabase_client()
@@ -127,12 +118,9 @@ def main():
     print(f"Found {len(user_df)} users for reminders.")
     
     for index, row in user_df.iterrows():
-        # Ensure 'user_id' and 'email' columns exist and are not empty
         if 'email' in row and pd.notna(row['email']) and 'user_id' in row and pd.notna(row['user_id']):
             username = row['user_id']
-            # Send the email
             send_reminder_email(row['email'], username)
-            # Add a small delay to avoid hitting Mailjet API rate limits (0.5 seconds is safe)
             time.sleep(0.5) 
         else:
             print(f"Skipping row {index}: missing email or user_id.")
