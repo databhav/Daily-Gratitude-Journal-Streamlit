@@ -1,6 +1,6 @@
 name: Daily Email Reminder
 
-# This defines the schedule for the job. 
+# Schedules this workflow to run every day at 12:00 PM UTC
 on:
   schedule:
     # CRON Syntax: Runs at minute 0, hour 12 (12:00 PM UTC), every day.
@@ -12,16 +12,36 @@ jobs:
   run_reminder_script:
     runs-on: ubuntu-latest
     steps:
-      # ... (Steps for checking out code and installing Python dependencies) ...
-      
+      - name: Checkout code
+        # Downloads your repository contents
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        # Sets up the Python environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10' 
+
+      - name: Install dependencies
+        # Installs requests, pandas, and supabase
+        run: |
+          pip install -r requirements.txt
+
       - name: Run Reminder Script
-        # This is where the secrets are loaded into environment variables (env)
+        # Defines ALL environment variables needed by send_reminders.py
         env:
+          # --- SUPABASE SECRETS ---
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          
+          # --- MAILJET SECRETS ---
+          # These must be set as GitHub Repository Secrets!
           MAILJET_PUBLIC_KEY: ${{ secrets.MAILJET_PUBLIC_KEY }} 
           MAILJET_SECRET_KEY: ${{ secrets.MAILJET_SECRET_KEY }}
           SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }} 
           
         run: |
-          python send_reminders.py # Executes the script
+          # The fix: Ensure we run the script assuming it's in the root folder.
+          # If the file is actually in a subfolder (e.g., 'scripts/'),
+          # you would change this to 'python scripts/send_reminders.py'
+          python send_reminders.py
